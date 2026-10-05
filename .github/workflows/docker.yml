@@ -54,21 +54,23 @@ jobs:
           docker login ghcr.io \
           -u "${{ github.actor }}" \
           --password-stdin
-
+      - name: Prepare image name
+        run: |
+          echo "IMAGE_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
       - name: Tag Docker image
         run: |
           docker tag docker-web-lab:test \
-            ghcr.io/${{ github.repository_owner }}/docker-nginx-ci-lab:latest
+            ghcr.io/${IMAGE_OWNER}/docker-nginx-ci-lab:latest
           
           docker tag docker-web-lab:test \
-            ghcr.io/${{ github.repository_owner }}/docker-nginx-ci-lab:${{ github.sha }}
+            ghcr.io/${IMAGE_OWNER}/docker-nginx-ci-lab:${{ github.sha }}
 
       - name: Push Docker image
         run: |
           docker push \
-            ghcr.io/${{ github.repository_owner }}/docker-nginx-ci-lab:latest
+            ghcr.io/${IMAGE_OWNER}/docker-nginx-ci-lab:latest
           docker push \
-            ghcr.io/${{ github.repository_owner }}/docker-nginx-ci-lab:${{ github.sha }}
+            ghcr.io/${IMAGE_OWNER}/docker-nginx-ci-lab:${{ github.sha }}
       - name: Cleanup
         if: always()
         run: docker rm -f docker-web-test || true
