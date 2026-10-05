@@ -12,6 +12,9 @@ on:
 jobs:
   docker-test:
     runs-on: ubuntu-latest
+    permissions:
+        contents: read
+        packages: write
 
     steps:
       - name: Checkout repository
@@ -45,6 +48,22 @@ jobs:
       - name: Show running containers
         run: docker ps
 
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+          docker login ghcr.io \
+          -u "${{ github.actor }}" \
+          --password-stdin
+
+      - name: Tag Docker image
+        run: |
+          docker tag docker-web-lab:test \
+          ghcr.io/${{ github.repository_owner }}/docker-nginx-ci-lab:latest
+
+      - name: Push Docker image
+        run: |
+          docker push \
+          ghcr.io/${{ github.repository_owner }}/docker-nginx-ci-lab:latest
       - name: Cleanup
         if: always()
         run: docker rm -f docker-web-test || true
