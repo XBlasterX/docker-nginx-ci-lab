@@ -1,0 +1,50 @@
+name: Docker CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t docker-web-lab:test .
+
+      - name: Run container
+        run: |
+          docker run -d \
+            --name docker-web-test \
+            -p 8080:80 \
+            docker-web-lab:test
+
+      - name: Wait for application
+        run: |
+          for i in {1..10}; do
+            if curl --fail http://localhost:8080; then
+              exit 0
+            fi
+
+            echo "Application not ready yet..."
+            sleep 2
+          done
+
+          echo "Application failed to start"
+          docker logs docker-web-test
+          exit 1
+
+      - name: Show running containers
+        run: docker ps
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f docker-web-test || true
